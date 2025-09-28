@@ -1,5 +1,6 @@
 pipeline {
     agent none  // no default agent
+    environment { JAVA_HOME = "/opt/java/openjdk" PATH = "${env.JAVA_HOME}/bin:${env.PATH}" }
     stages {
         stage('Compile on Slave 1') {
             agent { label 'slave1' } // assign this stage to slave1
