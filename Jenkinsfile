@@ -4,16 +4,36 @@ pipeline {
         stage('Compile on Slave 1') {
             agent { label 'slave1' } // assign this stage to slave1
             steps {
-                git 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
+                // Explicitly specify branch and repo
+                git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
+                
+                // Compile the project
                 sh 'mvn clean compile'
+                
+                // Save compiled files to use in the test stage
+                stash includes: '**/target/**', name: 'compiled-code'
             }
         }
+
         stage('Test on Slave 2') {
             agent { label 'slave2' } // assign this stage to slave2
             steps {
-                git 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
+                // Fetch the repository again (needed for proper Maven project structure)
+                git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
+
+                // Retrieve compiled artifacts from slave1
+                unstash 'compiled-code'
+
+                // Run tests
                 sh 'mvn test'
             }
+        }
+    }
+
+    post {
+        always {
+            // Collect test results in Jenkins
+            junit '**/target/surefire-reports/*.xml'
         }
     }
 }
