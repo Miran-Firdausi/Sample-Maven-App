@@ -9,7 +9,6 @@ pipeline {
             agent { label 'slave1' }
             steps {
                 git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
-                sh 'java -version'
                 sh 'mvn clean compile test-compile'
                 stash includes: '**/target/**', name: 'compiled-code'
             }
