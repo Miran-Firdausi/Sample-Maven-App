@@ -10,7 +10,7 @@ pipeline {
             steps {
                 git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
                 sh 'java -version'
-                sh 'mvn clean compile'
+                sh 'mvn clean compile test-compile'
                 stash includes: '**/target/**', name: 'compiled-code'
             }
         }
@@ -18,10 +18,9 @@ pipeline {
         stage('Test on Slave 2') {
             agent { label 'slave2' }
             steps {
-                git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
                 unstash 'compiled-code'
                 sh 'java -version'
-                sh 'mvn test'
+                sh 'mvn test -DskipCompile'
             }
         }
     }
