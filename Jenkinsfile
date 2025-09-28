@@ -1,46 +1,44 @@
 pipeline {
-    agent none  // no default agent
+    agent none
     stages {
         stage('Compile on Slave 1') {
-            agent { label 'slave1' } // assign this stage to slave1
-            tools {
-                jdk 'jdk17'          // use the JDK configured in Jenkins
-                maven 'maven-3.8.7'  // use the Maven configured in Jenkins
-            }
+            agent { label 'slave1' }
             steps {
-                // Explicitly specify branch and repo
                 git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
                 
-                // Compile the project
-                sh 'mvn clean compile'
+                // Explicitly set JAVA_HOME and PATH
+                script {
+                    def jdkHome = tool name: 'jdk17', type: 'jdk'
+                    def mavenHome = tool name: 'maven-3.8.7', type: 'maven'
+                    withEnv(["JAVA_HOME=${jdkHome}", "PATH=${jdkHome}/bin:${mavenHome}/bin:${env.PATH}"]) {
+                        sh 'mvn clean compile'
+                    }
+                }
                 
-                // Save compiled files to use in the test stage
                 stash includes: '**/target/**', name: 'compiled-code'
             }
         }
 
         stage('Test on Slave 2') {
-            agent { label 'slave2' } // assign this stage to slave2
-            tools {
-                jdk 'jdk17'
-                maven 'maven-3.8.7'
-            }
+            agent { label 'slave2' }
             steps {
-                // Fetch the repository again (needed for proper Maven project structure)
                 git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
-
-                // Retrieve compiled artifacts from slave1
+                
                 unstash 'compiled-code'
 
-                // Run tests
-                sh 'mvn test'
+                script {
+                    def jdkHome = tool name: 'jdk17', type: 'jdk'
+                    def mavenHome = tool name: 'maven-3.8.7', type: 'maven'
+                    withEnv(["JAVA_HOME=${jdkHome}", "PATH=${jdkHome}/bin:${mavenHome}/bin:${env.PATH}"]) {
+                        sh 'mvn test'
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            // Collect test results in Jenkins
             junit '**/target/surefire-reports/*.xml'
         }
     }
