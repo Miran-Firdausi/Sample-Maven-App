@@ -3,6 +3,10 @@ pipeline {
     stages {
         stage('Compile on Slave 1') {
             agent { label 'slave1' } // assign this stage to slave1
+            tools {
+                jdk 'jdk17'          // use the JDK configured in Jenkins
+                maven 'maven-3.8.7'  // use the Maven configured in Jenkins
+            }
             steps {
                 // Explicitly specify branch and repo
                 git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
@@ -17,6 +21,10 @@ pipeline {
 
         stage('Test on Slave 2') {
             agent { label 'slave2' } // assign this stage to slave2
+            tools {
+                jdk 'jdk17'
+                maven 'maven-3.8.7'
+            }
             steps {
                 // Fetch the repository again (needed for proper Maven project structure)
                 git branch: 'main', url: 'https://github.com/Miran-Firdausi/Sample-Maven-App.git'
